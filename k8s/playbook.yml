@@ -12,4 +12,32 @@
       host: https://api.sandbox.x8i5.p1.openshiftapps.com:6443
    
   tasks:
-    - name  
+    - name: Crear los objetos del manifiesto
+      k8s:
+        state: present
+        src: "{{ playbook_dir + '/hello.yml' }}"
+        
+    - name: Cambiar de ClusterIP a NodePort
+      k8s_service:
+        state: present
+        name: nodejs-ex
+        type: NodePort
+        ports:
+          - port: 8080
+            protocol: TCP
+            
+    - name: Obtener información de los pods
+      k8s_info:
+        kind: Pod
+        label_selectors:
+          - app = nodejs-ex
+          
+    - name: Exponer https con ClusterIP
+      k8s_service:
+        state: present
+        name: nodejs-ex
+        ports:
+          - port: 443
+            protocol: TCP
+        selector:
+          app: nodejs-ex
